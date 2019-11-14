@@ -1,9 +1,22 @@
 #include "pch.h"
 #include "logger.h"
 
+logWrite::logWrite(int _index)
+{
+	index = _index;
+}
+
 void logWrite::execute()
 {
-	
+	static std::mutex mutex;
+	mutex.lock();
+
+	message = "Message NO. ";
+	message += std::to_string(index);
+
+	std::cout << message << std::endl;
+
+	mutex.unlock();
 }
 
 logger::logger()
@@ -15,7 +28,7 @@ logger::logger(std::string _filename, int _maxThreadCount)
 {
 	filename = _filename;
 	maxThreadCount = _maxThreadCount;
-	//getInput();
+	queueTasks();
 	logThread();
 }
 
@@ -35,6 +48,7 @@ void logger::log(std::string message)
 	else
 	{
 		std::cout << "Failed to open file." << std::endl;
+		mutex.unlock();
 		return;
 	}
 
@@ -43,11 +57,17 @@ void logger::log(std::string message)
 
 void logger::logThread()
 {
-	for (int i = 0; i < 100; ++i)
+	while (tasks.size() > 0)
 	{
-		std::string msg = "MESSAGE NO. ";
-		msg += std::to_string(i);
-		tasks.emplace_back(logWrite());
+		if (threads.size() < maxThreadCount)
+		{
+			threads.emplace_back(std::thread(&logWrite::execute, tasks[0]));
+			tasks.erase(tasks.begin());
+		}
+		else
+		{
+			return;
+		}
 	}
 }
 
@@ -56,6 +76,16 @@ void logger::logFlush()
 	for (auto& t : threads)
 	{
 		t.join();
+	}
+}
+
+void logger::queueTasks()
+{
+	for (int i = 0; i < 100; ++i)
+	{
+		std::string msg = "MESSAGE NO. ";
+		msg += std::to_string(i);
+		tasks.emplace_back(logWrite(i));
 	}
 }
 

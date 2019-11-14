@@ -11,17 +11,19 @@ class logWrite : task
 {
 public:
 	std::string message;
+	int index;
 
+	logWrite(int _index);
 	void execute();
 };
 
 class logger
 {
 	std::string filename;
-	int maxThreadCount;
+	int maxThreadCount = 0;
 
 public:
-	std::vector<task> tasks;
+	std::vector<logWrite> tasks;
 	std::vector<std::thread> threads;
 
 	logger();
@@ -30,5 +32,6 @@ public:
 	void log(std::string message);
 	void logThread();
 	void logFlush();
+	void queueTasks();
 	void getInput();
 };
