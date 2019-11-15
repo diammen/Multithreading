@@ -6,8 +6,9 @@
 #include <string>
 #include <mutex>
 #include "task.h"
+#include "workerThread.h"
 
-class logWrite : task
+class logWrite : public task
 {
 public:
 	std::string message;
@@ -23,7 +24,7 @@ class logger
 	int maxThreadCount = 0;
 
 public:
-	std::vector<logWrite> tasks;
+	std::vector<task> tasks;
 	std::vector<std::thread> threads;
 
 	logger();

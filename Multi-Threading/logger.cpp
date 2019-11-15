@@ -68,6 +68,8 @@ void logger::logThread()
 		{
 			return;
 		}
+		threads.emplace_back(std::thread(&logWrite::execute, tasks[0]));
+		tasks.erase(tasks.begin());
 	}
 }
 
@@ -81,7 +83,7 @@ void logger::logFlush()
 
 void logger::queueTasks()
 {
-	for (int i = 0; i < 100; ++i)
+	for (int i = 1; i <= 100; ++i)
 	{
 		std::string msg = "MESSAGE NO. ";
 		msg += std::to_string(i);
