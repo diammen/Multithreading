@@ -9,9 +9,8 @@
 
 int main()
 {
-	logger myLog = logger("log.txt", 5);
-	std::vector<std::thread> threads;
+	logger myLog("log.txt", 4);
 
-	myLog.logFlush();
+	myLog.getInput();
     return 0;
 }

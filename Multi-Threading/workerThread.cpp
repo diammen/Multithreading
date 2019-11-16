@@ -1,7 +1,17 @@
 #include "pch.h"
 #include "workerThread.h"
 
-void workerThread::findWork(taskQueue * taskQueue)
+workerThread::workerThread(taskQueue<task> * taskQueue)
+{
+	thread = std::thread(&workerThread::findWork, this, taskQueue);
+}
+
+workerThread::~workerThread()
+{
+	thread.join();
+}
+
+void workerThread::findWork(taskQueue<task> * taskQueue)
 {
 	while (!taskQueue->isEmpty())
 	{

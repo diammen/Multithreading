@@ -7,6 +7,7 @@
 #include <mutex>
 #include "task.h"
 #include "workerThread.h"
+#include "taskQueue.h"
 
 class logWrite : public task
 {
@@ -21,18 +22,22 @@ public:
 class logger
 {
 	std::string filename;
+	std::string fileBuffer;
+	std::fstream file;
 	int maxThreadCount = 0;
+	int cycles = 0;
 
 public:
-	std::vector<task> tasks;
-	std::vector<std::thread> threads;
+	taskQueue<task> * tasks;
+	std::vector<workerThread*> threads;
 
 	logger();
+	~logger();
 	logger(std::string _filename, int _maxThreadCount);
 
 	void log(std::string message);
 	void logThread();
-	void logFlush();
+	void logTest();
 	void queueTasks();
 	void getInput();
 };

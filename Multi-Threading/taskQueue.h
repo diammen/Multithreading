@@ -1,45 +1,55 @@
 #pragma once
 #include <atomic>
-#include "logger.h"
+#include <mutex>
+#include "task.h"
 
+template <typename T>
 class taskQueue
 {
 private:
 	size_t capacity;
-	std::mutex access;
-	size_t head;
-	task ** tasks;
+	size_t writeHead;
+	size_t readHead;
+	T ** tasks;
 
 public:
 
 	taskQueue(size_t taskCapacity)
 	{
-		tasks = new task*[taskCapacity];
+		tasks = new T*[taskCapacity];
 		capacity = taskCapacity;
-		head = 0;
+		writeHead = 0;
+		readHead = 0;
 	}
 	~taskQueue()
 	{
 		delete[] tasks;
 	}
 
-	task * pop()
+	T * pop()
 	{
-		task * t = tasks[--head];
+		task * t = tasks[readHead % maxCapacity()];
+		++readHead;
 		return t;
 	}
 
-	void push(task * t)
+	void push(T * t)
 	{
-		tasks[head++] = t;
+		tasks[writeHead % maxCapacity()] = t;
+		++writeHead;
 	}
 
 	bool isEmpty()
 	{
-		return head == 0;
+		return writeHead == readHead;
 	}
 
-	size_t capacity()
+	size_t size()
+	{
+		return (writeHead >= readHead) ? (writeHead - readHead) + 1 : maxCapacity() - (readHead - writeHead) + 1;
+	}
+
+	size_t maxCapacity()
 	{
 		return capacity;
 	}

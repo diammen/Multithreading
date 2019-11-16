@@ -24,10 +24,19 @@ logger::logger()
 
 }
 
+logger::~logger()
+{
+	for (auto& t : threads)
+	{
+		delete t;
+	}
+}
+
 logger::logger(std::string _filename, int _maxThreadCount)
 {
 	filename = _filename;
 	maxThreadCount = _maxThreadCount;
+	tasks = new taskQueue<task>(1000);
 	queueTasks();
 	logThread();
 }
@@ -57,46 +66,32 @@ void logger::log(std::string message)
 
 void logger::logThread()
 {
-	while (tasks.size() > 0)
+	for (size_t i = 0; i < maxThreadCount; ++i)
 	{
-		if (threads.size() < maxThreadCount)
-		{
-			threads.emplace_back(std::thread(&logWrite::execute, tasks[0]));
-			tasks.erase(tasks.begin());
-		}
-		else
-		{
-			return;
-		}
-		threads.emplace_back(std::thread(&logWrite::execute, tasks[0]));
-		tasks.erase(tasks.begin());
+		threads.emplace_back(new workerThread(tasks));
 	}
 }
 
-void logger::logFlush()
+void logger::logTest()
 {
-	for (auto& t : threads)
-	{
-		t.join();
-	}
+	threads.clear();
+	queueTasks();
+	logThread();
 }
 
 void logger::queueTasks()
 {
-	for (int i = 1; i <= 100; ++i)
+	for (int i = 1; i <= tasks->maxCapacity(); ++i)
 	{
 		std::string msg = "MESSAGE NO. ";
 		msg += std::to_string(i);
-		tasks.emplace_back(logWrite(i));
+		tasks->push(new logWrite(i + (cycles * tasks->maxCapacity())));
 	}
+	cycles++;
 }
 
 void logger::getInput()
 {
-	std::string input;
-
-	std::cout << "Enter a character: " << std::endl;
-	std::cin >> input;
-
-	threads.emplace_back(&logger::log, this, input);
+	getchar();
+	logTest();
 }
